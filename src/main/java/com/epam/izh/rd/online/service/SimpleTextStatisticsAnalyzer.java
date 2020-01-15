@@ -1,10 +1,10 @@
 package com.epam.izh.rd.online.service;
 
 import com.epam.izh.rd.online.helper.Direction;
-
 import java.util.*;
-
-import static java.util.Collections.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Совет:
@@ -23,7 +23,10 @@ public class SimpleTextStatisticsAnalyzer implements TextStatisticsAnalyzer {
      */
     @Override
     public int countSumLengthOfWords(String text) {
-        return 0;
+        AtomicInteger counterLenghtAllWords = new AtomicInteger();
+        List<String> allWordsList = getWords(text);
+        allWordsList.iterator().forEachRemaining(o -> counterLenghtAllWords.addAndGet(o.length()));
+        return counterLenghtAllWords.get();
     }
 
     /**
@@ -34,7 +37,7 @@ public class SimpleTextStatisticsAnalyzer implements TextStatisticsAnalyzer {
      */
     @Override
     public int countNumberOfWords(String text) {
-        return 0;
+        return getWords(text).size();
     }
 
     /**
@@ -44,7 +47,7 @@ public class SimpleTextStatisticsAnalyzer implements TextStatisticsAnalyzer {
      */
     @Override
     public int countNumberOfUniqueWords(String text) {
-        return 0;
+        return getUniqueWords(text).size();
     }
 
     /**
@@ -57,7 +60,13 @@ public class SimpleTextStatisticsAnalyzer implements TextStatisticsAnalyzer {
      */
     @Override
     public List<String> getWords(String text) {
-        return emptyList();
+        text = (text == null) ? "" : text;
+        List<String> allWordsList = new ArrayList<>();
+        Matcher matcherOnlyWords = Pattern.compile("\\w+").matcher(text);
+        while (matcherOnlyWords.find()) {
+            allWordsList.add(matcherOnlyWords.group());
+        }
+        return allWordsList;
     }
 
     /**
@@ -70,7 +79,11 @@ public class SimpleTextStatisticsAnalyzer implements TextStatisticsAnalyzer {
      */
     @Override
     public Set<String> getUniqueWords(String text) {
-        return emptySet();
+        List<String> allWordsList = getWords(text);
+        Set<String> uniqueWordsSet = new HashSet<>();
+        Iterator<String> iterAllWords = allWordsList.iterator();
+        iterAllWords.forEachRemaining(o -> uniqueWordsSet.add(o));
+        return uniqueWordsSet;
     }
 
     /**
@@ -82,19 +95,30 @@ public class SimpleTextStatisticsAnalyzer implements TextStatisticsAnalyzer {
      */
     @Override
     public Map<String, Integer> countNumberOfWordsRepetitions(String text) {
-        return emptyMap();
+        List<String> allWordsList = getWords(text);
+        Map<String, Integer> eachWordCountMap = new HashMap<>();
+        Iterator<String> iterAllWords = allWordsList.iterator();
+        iterAllWords.forEachRemaining(o ->
+                eachWordCountMap.put(o, eachWordCountMap.get(o) == null ? 1 : eachWordCountMap.get(o) + 1));
+        return eachWordCountMap;
     }
 
     /**
      * Необходимо реализовать функционал вывода слов из текста в отсортированном виде (по длине) в зависимости от параметра direction.
      * Например для текста "Hello, Hi, mother, father - good, cat, c!!" должны вернуться результаты :
-     * ASC : {"mother", "father", "Hello", "good", "cat", "Hi", "c"}
-     * DESC : {"c", "Hi", "cat", "good", "Hello", "father", "mother"}
+     * ASC : {"c", "Hi", "cat", "good", "Hello", "father", "mother"}
+     * DESC : {"mother", "father", "Hello", "good", "cat", "Hi", "c"}
      *
      * @param text текст
      */
     @Override
     public List<String> sortWordsByLength(String text, Direction direction) {
-        return emptyList();
+        List<String> sortWordsByLength = getWords(text);
+        if (direction.equals(Direction.ASC)) {
+            sortWordsByLength.sort(Comparator.comparing(o -> o.length()));
+        } else {
+            sortWordsByLength.sort(Comparator.comparing(o -> -o.length()));
+        }
+        return sortWordsByLength;
     }
 }
